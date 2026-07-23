@@ -1,0 +1,6 @@
+Flask, render_template, request, jsonify
+google.generativeai as genai
+datetime
+pytz
+re
+html 
