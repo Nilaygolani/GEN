@@ -1,3 +1,13 @@
 Flask==3.0.2
 google-generativeai==0.8.3
 pytz==2024.1
+
+
+
+pytz
+re
+
+requests
+base64
+io
+Image
