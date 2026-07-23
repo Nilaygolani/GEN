@@ -137,13 +137,6 @@
             color: #c0c4d0;
             border: 1px solid rgba(255, 255, 255, 0.03);
             border-bottom-left-radius: 4px;
-            /* ===== FIX: Preserve line breaks in bot messages ===== */
-            white-space: pre-wrap;
-        }
-
-        /* ===== FIX: Override pre-wrap for child elements ===== */
-        .message.bot pre {
-            white-space: pre;
         }
 
         .message.bot::before {
@@ -153,10 +146,48 @@
             font-weight: 600;
             letter-spacing: 4px;
             color: rgba(150, 180, 220, 0.35);
-            margin-bottom: 5px;
+            margin-bottom: 1px;
         }
 
-        /* ===== CODE BLOCK STYLING ===== */
+        /* ===== VOICE INDICATOR ===== */
+        .voice-indicator {
+            align-self: center;
+            background: rgba(150, 180, 220, 0.05);
+            border: 1px solid rgba(150, 180, 220, 0.1);
+            border-radius: 20px;
+            padding: 8px 20px;
+            display: none;
+            font-size: 12px;
+            color: rgba(150, 180, 220, 0.6);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulseGlow 1.5s ease-in-out infinite;
+        }
+
+        .voice-indicator.active {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .voice-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #60a0e0;
+            animation: micPulse 0.8s ease-in-out infinite;
+        }
+
+        @keyframes micPulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { border-color: rgba(150, 180, 220, 0.1); }
+            50% { border-color: rgba(150, 180, 220, 0.3); }
+        }
+
         .message pre {
             background: #0d0d14;
             border: 1px solid rgba(150, 180, 220, 0.08);
@@ -189,10 +220,7 @@
             color: #d4a0a0;
         }
 
-        .message p {
-            margin: 6px 0;
-        }
-
+        .message p { margin: 6px 0; }
         .message.error {
             align-self: center;
             background: rgba(200, 60, 60, 0.06);
@@ -321,7 +349,7 @@
             text-transform: uppercase;
         }
 
-        .reset-btn {
+        .footer-btn {
             background: none;
             border: 1px solid rgba(255, 255, 255, 0.04);
             color: rgba(255, 255, 255, 0.12);
@@ -333,11 +361,67 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .reset-btn:hover {
+        .footer-btn:hover {
             border-color: rgba(150, 180, 220, 0.15);
             color: rgba(150, 180, 220, 0.3);
+        }
+
+        .footer-btn.voice-btn {
+            border-color: rgba(100, 180, 120, 0.1);
+            color: rgba(100, 180, 120, 0.2);
+        }
+
+        .footer-btn.voice-btn:hover {
+            border-color: rgba(100, 180, 120, 0.2);
+            color: rgba(100, 180, 120, 0.4);
+        }
+
+        .footer-btn.voice-btn.listening {
+            border-color: rgba(255, 80, 80, 0.4);
+            color: rgba(255, 80, 80, 0.6);
+            animation: voicePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes voicePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 80, 80, 0.1); }
+            50% { box-shadow: 0 0 0 6px rgba(255, 80, 80, 0.05); }
+        }
+
+        .footer-btn.voice-btn .mic-icon {
+            font-size: 12px;
+        }
+
+        /* ====== NEW: IMG DET Button Styles ====== */
+        .footer-btn.img-btn {
+            border-color: rgba(80, 160, 200, 0.15);
+            color: rgba(80, 160, 200, 0.25);
+        }
+
+        .footer-btn.img-btn:hover {
+            border-color: rgba(80, 160, 200, 0.3);
+            color: rgba(80, 160, 200, 0.5);
+        }
+
+        .footer-btn.img-btn.loading {
+            border-color: rgba(255, 200, 50, 0.4);
+            color: rgba(255, 200, 50, 0.6);
+            animation: imgPulse 0.8s ease-in-out infinite;
+        }
+
+        @keyframes imgPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         @media (max-width: 500px) {
@@ -373,6 +457,12 @@
         </div>
     </div>
 
+    <!-- Voice Indicator -->
+    <div class="voice-indicator" id="voiceIndicator">
+        <span class="dot"></span>
+        <span>Listening...</span>
+    </div>
+
     <div class="typing-indicator" id="typingIndicator">
         <span></span>
         <span></span>
@@ -393,7 +483,17 @@
 
     <div class="chat-footer">
         <span>Encrypted Channel</span>
-        <button class="reset-btn" onclick="resetChat()">⟳ Reset</button>
+        <div class="footer-actions">
+            <!-- ====== NEW: Hidden file input + IMG DET button ====== -->
+            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+            <button class="footer-btn img-btn" id="imgBtn" onclick="document.getElementById('imageInput').click()" title="Image Detection">
+                🖼️ IMG DET
+            </button>
+            <button class="footer-btn voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice Chat">
+                <span class="mic-icon">🎤</span> VOICE
+            </button>
+            <button class="footer-btn" onclick="resetChat()">⟳ RESET</button>
+        </div>
     </div>
 
 </div>
@@ -402,7 +502,161 @@
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
     const typingIndicator = document.getElementById('typingIndicator');
+    const voiceIndicator = document.getElementById('voiceIndicator');
+    const voiceBtn = document.getElementById('voiceBtn');
 
+    let isListening = false;
+    let recognition = null;
+
+    // ====== INITIALIZE SPEECH RECOGNITION ======
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            addMessage('Voice recognition not supported in this browser. Try Chrome or Edge.', 'error');
+            voiceBtn.style.display = 'none';
+            return null;
+        }
+        
+        const recog = new SpeechRecognition();
+        recog.lang = 'en-US';
+        recog.continuous = false;
+        recog.interimResults = false;
+        recog.maxAlternatives = 1;
+        
+        recog.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            console.log('Recognized:', transcript);
+            stopListening();
+            // Send voice input
+            sendVoiceMessage(transcript);
+        };
+        
+        recog.onerror = function(event) {
+            console.error('Speech error:', event.error);
+            stopListening();
+            if (event.error === 'not-allowed') {
+                addMessage('Microphone access denied. Please allow mic permissions.', 'error');
+            } else if (event.error === 'no-speech') {
+                addMessage('No speech detected. Try again.', 'error');
+            }
+        };
+        
+        recog.onend = function() {
+            if (isListening) {
+                // Restart if still in listening mode (user didn't speak)
+                // Actually don't restart - user needs to click again
+                stopListening();
+            }
+        };
+        
+        return recog;
+    }
+
+    // ====== TOGGLE VOICE LISTENING ======
+    function toggleVoice() {
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
+    }
+
+    function startListening() {
+        if (!recognition) {
+            recognition = initSpeechRecognition();
+            if (!recognition) return;
+        }
+        
+        isListening = true;
+        voiceBtn.classList.add('listening');
+        voiceBtn.innerHTML = '<span class="mic-icon">🔴</span> STOP';
+        voiceIndicator.classList.add('active');
+        
+        try {
+            recognition.start();
+        } catch (e) {
+            console.error('Start error:', e);
+            stopListening();
+        }
+    }
+
+    function stopListening() {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        voiceBtn.innerHTML = '<span class="mic-icon">🎤</span> VOICE';
+        voiceIndicator.classList.remove('active');
+        
+        try {
+            recognition?.stop();
+        } catch (e) {
+            // Ignore stop errors
+        }
+    }
+
+    // ====== SEND VOICE MESSAGE ======
+    async function sendVoiceMessage(transcript) {
+        // Show user message
+        addMessage(transcript, 'user');
+        
+        // Show typing
+        typingIndicator.style.display = 'flex';
+        scrollToBottom();
+        
+        try {
+            const response = await fetch('/voice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: transcript })
+            });
+            
+            const data = await response.json();
+            typingIndicator.style.display = 'none';
+            
+            if (response.ok) {
+                // Show text reply
+                addMessage(data.reply, 'bot');
+                
+                // Play audio if available
+                if (data.audio) {
+                    playAudio(data.audio);
+                }
+            } else {
+                addMessage(`Error: ${data.reply}`, 'error');
+            }
+        } catch (error) {
+            typingIndicator.style.display = 'none';
+            addMessage('Connection lost. The signal is down.', 'error');
+        }
+        
+        scrollToBottom();
+    }
+
+    // ====== PLAY AUDIO ======
+    function playAudio(base64Audio) {
+        try {
+            const audioBytes = atob(base64Audio);
+            const audioArray = new Uint8Array(audioBytes.length);
+            for (let i = 0; i < audioBytes.length; i++) {
+                audioArray[i] = audioBytes.charCodeAt(i);
+            }
+            
+            const blob = new Blob([audioArray], { type: 'audio/mpeg' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            
+            audio.onended = function() {
+                URL.revokeObjectURL(url);
+            };
+            
+            audio.play().catch(e => {
+                console.error('Audio play error:', e);
+            });
+        } catch (e) {
+            console.error('Audio decode error:', e);
+        }
+    }
+
+    // ====== REGULAR TEXT CHAT ======
     userInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 110) + 'px';
@@ -477,6 +731,67 @@
         w.textContent = 'The night is darkest just before the dawn. I\'m here. What do you need?';
         chatMessages.appendChild(w);
         userInput.focus();
+    }
+
+    // ====== NEW: IMAGE DETECTION ======
+    async function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const imgBtn = document.getElementById('imgBtn');
+        
+        // Show image preview in chat
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgMsg = document.createElement('div');
+            imgMsg.className = 'message user';
+            imgMsg.innerHTML = `
+                <div style="margin-bottom:6px;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.2)">
+                    📷 IMAGE — ${file.name}
+                </div>
+                <img src="${e.target.result}" 
+                     style="max-width:100%;max-height:220px;border-radius:10px;object-fit:contain;background:#0a0a10;">
+            `;
+            chatMessages.appendChild(imgMsg);
+            scrollToBottom();
+        };
+        reader.readAsDataURL(file);
+        
+        // Loading state
+        imgBtn.classList.add('loading');
+        imgBtn.innerHTML = '⏳ DETECTING...';
+        typingIndicator.style.display = 'flex';
+        scrollToBottom();
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            const response = await fetch('/detect-image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            typingIndicator.style.display = 'none';
+            imgBtn.classList.remove('loading');
+            imgBtn.innerHTML = '🖼️ IMG DET';
+            
+            if (response.ok && data.success) {
+                addMessage(data.analysis, 'bot');
+            } else {
+                addMessage(`⚠️ Detection failed: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            typingIndicator.style.display = 'none';
+            imgBtn.classList.remove('loading');
+            imgBtn.innerHTML = '🖼️ IMG DET';
+            addMessage('⚠️ Connection lost. Image analysis failed.', 'error');
+        }
+        
+        // Reset input so same file can be re-selected
+        event.target.value = '';
+        scrollToBottom();
     }
 
     window.addEventListener('load', () => userInput.focus());
