@@ -8,7 +8,7 @@ import html as html_mod
 app = Flask(__name__)
 
 # 🔐 API Key Configuration
-API_KEY = "AQ.Ab8RN6Ib5M5Ufa4ErQJQ8AIa9xnlm1laqV-RMZIZiOZ_nv1M1Q"
+API_KEY = "AQ.Ab8RN6Ib5M"
 genai.configure(api_key=API_KEY)
 
 
